@@ -188,7 +188,7 @@ resource "tls_private_key" "cloud_key" {
   rsa_bits  = 2048
 }
 resource "aws_key_pair" "cloud_key" {
-  key_name   = "demo"
+  key_name   = "cloud_key"
   public_key = tls_private_key.cloud_key.public_key_openssh
 }
 # Save generated key pair locally
@@ -201,8 +201,8 @@ resource "aws_key_pair" "cloud_key" {
 #create instance profile
 #####################################
 
-resource "aws_iam_instance_profile" "web_profile" {
-  name = "web_profile"
+resource "aws_iam_instance_profile" "web_profile_cloud" {
+  name = "web_profile_cloud"
   role = "EC2_admin"
   #role  = "s3_read_role"
 }
@@ -222,7 +222,7 @@ resource "aws_instance" "web-server" {
   subnet_id                = aws_subnet.public.*.id[count.index]
   key_name                = "${aws_key_pair.cloud_key.key_name}"
   associate_public_ip_address = true
-  iam_instance_profile = "${aws_iam_instance_profile.web_profile.name}"
+  iam_instance_profile = "${aws_iam_instance_profile.web_profile_cloud.name}"
   tags = {
     Name       = "Web_Server_${count.index}"
     Purpose    = "web server"
@@ -265,7 +265,7 @@ output "ec2_global_ips" {
 ############################
 
 resource "aws_lb" "web-servers" {
-  name                       = "webServersLB"
+  name                       = "webServersLB-cloud"
   internal                   = false
   load_balancer_type         = "application"
   subnets                    = aws_subnet.public.*.id
@@ -290,7 +290,7 @@ resource "aws_lb_listener" "web" {
 
 
 resource "aws_lb_target_group" "web" {
-  name     = "web-target-group"
+  name     = "web-target-group-cloud"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.wiskey_vpc.id
